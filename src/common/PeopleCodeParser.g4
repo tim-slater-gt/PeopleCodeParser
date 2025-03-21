@@ -220,7 +220,7 @@ classMember
 	;
 
 method
-	:	METHOD genericID SEMI* statements? END_METHOD
+	:	METHOD genericID SEMI* methodAnnotations statements? END_METHOD
 	;
 
 getter
@@ -436,4 +436,20 @@ functionArguments
 
 functionArgument
 	:	USER_VARIABLE (AS typeT)?
+	;
+
+methodAnnotations
+	:	methodParameterAnnotation* methodReturnAnnotation? methodExtendsAnnotation?
+	;
+
+methodParameterAnnotation
+	:	SLASH_PLUS methodArgument COMMA? PLUS_SLASH
+	;
+
+methodReturnAnnotation
+	:	SLASH_PLUS RETURNS typeT PLUS_SLASH
+	;
+
+methodExtendsAnnotation
+	:	SLASH_PLUS EXTENDS DIV IMPLEMENTS appClassPath DOT genericID PLUS_SLASH
 	;
