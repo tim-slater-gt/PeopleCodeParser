@@ -15,18 +15,11 @@ options {
 //******************************************************************************
 
 /**
- * Entry point for an Application Class.
- */
-appClass
-	:	importDeclaration* classDeclaration (SEMI+ classExternalDeclaration)* (SEMI* classBody)? SEMI* EOF		#AppClassProgram
-	|	importDeclaration* interfaceDeclaration SEMI* EOF														#InterfaceProgram
-	;
-
-/**
  * Entry point for a PeopleCode program.
  */
 program
-	:	importDeclaration* programPreambles? SEMI* statements? SEMI* EOF
+	:   appClass
+	|	importsBlock programPreambles? SEMI* statements? SEMI* EOF
 	;
 
 
@@ -34,8 +27,17 @@ program
 //* ADDITIONAL PARSER RULES
 //******************************************************************************
 
+importsBlock
+	:	importDeclaration*
+	;
+
 importDeclaration
 	:	IMPORT (appPackageAll | appClassPath) SEMI+
+	;
+
+appClass
+	:	importsBlock classDeclaration (SEMI+ classExternalDeclaration)* (SEMI* classBody)? SEMI* EOF		#AppClassProgram
+	|	importsBlock interfaceDeclaration SEMI* EOF														#InterfaceProgram
 	;
 
 appPackageAll
@@ -135,6 +137,20 @@ typeT
 	|	simpleType						#SimpleTypeType
 	;
 
+// Special type rule specifically for method annotations, which require Array2/Array3 notation
+annotationType
+	:	ARRAY2 OF typeT				#AnnotationArray2Type
+	|	ARRAY3 OF typeT				#AnnotationArray3Type
+	|	ARRAY4 OF typeT				#AnnotationArray4Type
+	|	ARRAY5 OF typeT				#AnnotationArray5Type
+	|	ARRAY6 OF typeT				#AnnotationArray6Type
+	|	ARRAY7 OF typeT				#AnnotationArray7Type
+	|	ARRAY8 OF typeT				#AnnotationArray8Type
+	|	ARRAY9 OF typeT				#AnnotationArray9Type
+	|	ARRAY OF typeT				#AnnotationArray1Type  // For single-dimension arrays
+	|	typeT						#AnnotationBaseType
+	;
+
 propertyDeclaration
 	:	PROPERTY typeT genericID GET SET?				#PropertyGetSet
 	|	PROPERTY typeT genericID ABSTRACT? READONLY?	#PropertyDirect	// abstract is sometimes featured before readonly in some delivered classes
@@ -224,11 +240,11 @@ method
 	;
 
 getter
-	:	GET genericID SEMI* statements END_GET
+	:	GET genericID methodReturnAnnotation SEMI* statements END_GET
 	;
 
 setter
-	:	SET genericID SEMI* statements? END_SET
+	:	SET genericID methodParameterAnnotation SEMI* statements? END_SET
 	;
 
 statements
@@ -361,6 +377,14 @@ dotAccess
 allowableFunctionName
 	:	ANY
 	|	ARRAY
+	|	ARRAY2
+	|	ARRAY3
+	|	ARRAY4
+	|	ARRAY5
+	|	ARRAY6
+	|	ARRAY7
+	|	ARRAY8
+	|	ARRAY9
 	|	BOOLEAN
 	|	COMPONENT
 	|	CONSTANT
@@ -443,13 +467,17 @@ methodAnnotations
 	;
 
 methodParameterAnnotation
-	:	SLASH_PLUS methodArgument COMMA? PLUS_SLASH
+	:	SLASH_PLUS methodAnnotationArgument COMMA? PLUS_SLASH
+	;
+
+methodAnnotationArgument
+	:	USER_VARIABLE AS annotationType OUT?
 	;
 
 methodReturnAnnotation
-	:	SLASH_PLUS RETURNS typeT PLUS_SLASH
+	:	SLASH_PLUS RETURNS annotationType PLUS_SLASH
 	;
 
 methodExtendsAnnotation
-	:	SLASH_PLUS EXTENDS DIV IMPLEMENTS appClassPath DOT genericID PLUS_SLASH
+    :   SLASH_PLUS EXTENDS DIV IMPLEMENTS appClassPath DOT genericID PLUS_SLASH
 	;
